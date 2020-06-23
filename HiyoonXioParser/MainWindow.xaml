@@ -1,0 +1,68 @@
+﻿<Window x:Class="HiyoonXioParser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HiyoonXioParser"
+        mc:Ignorable="d"
+        Title="HiyoonXioParser" Height="450" Width="1200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="35"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="110"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Margin="5" Height="25" Width="600" Grid.Column="0" Name="tbPath" HorizontalAlignment="Left">D:\02.문서\03.개발\03.대외</TextBox>
+            <Button Margin="5" Width="100" Height="25" Grid.Column="1" Name="btnSearch" >Search</Button>
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0" Margin="5,0,5,5"  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBox Grid.Row="0" Name="tbFilter" Height="25" Margin="0,0,0,5" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ListBox HorizontalAlignment="Left" Width="320" Name="lbXio"
+                     DisplayMemberPath="Name"/>
+                </ScrollViewer>
+            </Grid>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="110"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" TextWrapping="Wrap" Name="tbXIO"/>
+                        <Button Grid.Column="1" Margin="5,0,5,5" Width="100" Height="25" VerticalAlignment="Top" Name="btnParsing">Parsing</Button>
+                    </Grid>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,5,5,5" >
+                    <ListView VerticalAlignment="Top" Name="lvXio">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Id" DisplayMemberBinding="{Binding Path=Id}" Width="200"/>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Path=Name}" Width="200"/>
+                                <GridViewColumn Header="Length" DisplayMemberBinding="{Binding Path=Length}" Width="50"/>
+                                <GridViewColumn Header="Value" DisplayMemberBinding="{Binding Path=Value}" Width="350" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
