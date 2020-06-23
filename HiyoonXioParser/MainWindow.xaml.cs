@@ -35,7 +35,8 @@ namespace HiyoonXioParser
             this.lbXio.ItemsSource = XIOs;
             this.lvXio.ItemsSource = XIODatas;
 
-            this.btnParsing.Click += BtnParsing_Click;
+            this.btnParse.Click += BtnParse_Click;
+            this.btnMerge.Click += BtnMerge_Click;
             this.btnSearch.Click += BtnSearch_Click;
             this.tbFilter.TextChanged += TbFilter_TextChanged;
             CommandBinding lbCb = new CommandBinding(ApplicationCommands.Copy, LbCopyCmdExecuted, LbCopyCmdCanExecute);
@@ -50,7 +51,7 @@ namespace HiyoonXioParser
         void LbCopyCmdExecuted(object target, ExecutedRoutedEventArgs e)
         {
             ListBox lb = e.OriginalSource as ListBox;
-            string copyContent = String.Empty; 
+            string copyContent = String.Empty;
             foreach (XIOFile item in lb.SelectedItems)
             {
                 copyContent = item.Name;
@@ -89,7 +90,7 @@ namespace HiyoonXioParser
 
         void LvCopyCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            ListView lv = e.OriginalSource as ListView; 
+            ListView lv = e.OriginalSource as ListView;
             if (lv.SelectedItems.Count > 0)
             {
                 e.CanExecute = true;
@@ -127,7 +128,7 @@ namespace HiyoonXioParser
             XIOsAll.Where(x => String.IsNullOrEmpty(this.tbFilter.Text) || x.Name.Contains(this.tbFilter.Text)).ToList().ForEach(XIOs.Add);
         }
 
-        private void BtnParsing_Click(object sender, RoutedEventArgs e)
+        private void BtnParse_Click(object sender, RoutedEventArgs e)
         {
             if (this.lbXio.SelectedItem == null)
             {
@@ -139,6 +140,18 @@ namespace HiyoonXioParser
             XIOFile xIOFile = this.lbXio.SelectedItem as XIOFile;
             List<XIOData> xioDatas = XIOParser.parse(xIOFile.FilePath, this.tbXIO.Text);
             xioDatas.ToList().ForEach(this.XIODatas.Add);
+        }
+
+        private void BtnMerge_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.XIODatas == null || this.XIODatas.Count < 1)
+            {
+                MessageBox.Show("XIO Data가 없습니다.");
+                return;
+            }
+
+            String result = XIOParser.merge(this.XIODatas.ToList());
+            this.tbXIO.Text = result;
         }
 
         private String initFilePath()
@@ -177,6 +190,26 @@ namespace HiyoonXioParser
                 using (StreamWriter writer = new StreamWriter(isoStream))
                 {
                     writer.WriteLine(newPath);
+                }
+            }
+        }
+
+
+        private void lbXio_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var listBox = sender as ListBox;
+            if (listBox != null)
+            {
+                DependencyObject mouseItem = e.OriginalSource as DependencyObject;
+                if (mouseItem != null)
+                {
+                    // Get the container based on the element
+                    var container = listBox.ContainerFromElement(mouseItem);
+                    if (container != null)
+                    {
+                        var index = listBox.ItemContainerGenerator.IndexFromContainer(container);
+                        listBox.SelectedIndex = index;
+                    }
                 }
             }
         }

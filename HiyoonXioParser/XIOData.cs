@@ -10,13 +10,15 @@ namespace HiyoonXioParser
         public String Id { get; set; }
         public String Name { get; set; }
         public String Value { get; set; }
+        public String OrgValue { get; set; }
         public int Length { get; set; }
 
         public XIOData(String id, String name, String value, int length)
         {
             this.Id = id;
             this.Name = name;
-            this.Value = String.Format("{0}{1}{2}", "[", value, "]");
+            this.OrgValue = value;
+            this.Value = value; // String.Format("{0}{1}{2}", "[", value, "]");
             this.Length = length;
         }
     }

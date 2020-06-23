@@ -28,14 +28,32 @@ namespace HiyoonXioParser
                 getXIODatas(includeFields, xioByte).ForEach(XIODatas.Add);
             }
 
-            if (sttIdx > 0)
-            {
-                sttIdx++;
-            }
-
             XmlNodeList fields = getNodeList(filePath, "field");
             getXIODatas(fields, xioByte).ForEach(XIODatas.Add);
             return XIODatas;
+        }
+
+        public static String merge(List<XIOData> xIODatas)
+        {
+            byte[] result = null;
+            xIODatas.ForEach(x =>
+            {
+                byte[] bytes = euckr.GetBytes(x.Value).Take(x.Length).ToArray();
+                if (result == null)
+                {
+                    result = bytes;
+                } else
+                {
+                    result = result.Concat(bytes).ToArray();
+                }
+
+                for (int i = 0; i < x.Length - bytes.Length; i++)
+                {
+                    result = result.Concat(euckr.GetBytes(" ")).ToArray();
+                }
+            });
+
+            return euckr.GetString(result);
         }
 
         private static XmlNodeList getNodeList(String filePath, String tagName)
