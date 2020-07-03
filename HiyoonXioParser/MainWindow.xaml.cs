@@ -19,7 +19,10 @@ namespace HiyoonXioParser
         private String path;
         private String isoFileName = "hiyoon.txt";
         private String isoXioFileName = "hiyoonxio.txt";
-        private BackgroundWorker worker;
+        private static int preIdx = 1109;
+        private static int postIdx = 2;
+        private BackgroundWorker xioFileSearchWorker;
+        private BackgroundWorker tbPasteWorker;
         private ObservableCollection<XIOFile> XIOsAll = new ObservableCollection<XIOFile>();
         private ObservableCollection<XIOFile> XIOs = new ObservableCollection<XIOFile>();
         private ObservableCollection<XIOData> XIODatas = new ObservableCollection<XIOData>();
@@ -31,13 +34,18 @@ namespace HiyoonXioParser
             this.lbXio.ItemsSource = XIOs;
             this.lvXio.ItemsSource = XIODatas;
 
-            this.btnParse.Click += BtnParse_Click;
+            this.btnXioParse.Click += BtnXioParse_Click;
+            this.btnContentsParse.Click += BtnContentsParse_Click;
             this.btnMerge.Click += BtnMerge_Click;
             this.btnSearch.Click += BtnSearch_Click;
             this.tbFilter.TextChanged += TbFilter_TextChanged;
-            worker = new BackgroundWorker();
-            worker.DoWork += new DoWorkEventHandler(worker_DoWork);
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
+            DataObject.AddPastingHandler(this.tbXIO, OnPaste);
+            xioFileSearchWorker = new BackgroundWorker();
+            xioFileSearchWorker.DoWork += new DoWorkEventHandler(xioFileSearchWorker_DoWork);
+            xioFileSearchWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(xioFileSearchWorker_RunWorkerCompleted);
+            tbPasteWorker = new BackgroundWorker();
+            tbPasteWorker.DoWork += new DoWorkEventHandler(tbPasteWorker_DoWork);
+            tbPasteWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(tbPasteWorker_RunWorkerCompleted);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             CommandBinding lbCb = new CommandBinding(ApplicationCommands.Copy, LbCopyCmdExecuted, LbCopyCmdCanExecute);
@@ -47,7 +55,22 @@ namespace HiyoonXioParser
 
             this.tbPath.Text = initIsoFile(this.isoFileName);
             this.initIsoFile(this.isoXioFileName);
-            //this.writeIsoFile(this.isoXioFileName);
+        }
+
+        private void OnPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            tbPasteWorker.RunWorkerAsync();
+        }
+
+        private void BtnContentsParse_Click(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrEmpty(this.tbXIO.Text))
+            {
+                MessageBox.Show("분석할 내용이 없습니다.");
+                return;
+            }
+
+            tbPasteWorker.RunWorkerAsync();
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -70,8 +93,7 @@ namespace HiyoonXioParser
 
         void LbCopyCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            ListBox lb = e.OriginalSource as ListBox;
-            // CanExecute only if there is one or more selected Item.   
+            ListBox lb = e.OriginalSource as ListBox; 
             if (lb.SelectedItems.Count > 0)
             {
                 e.CanExecute = true;
@@ -121,17 +143,18 @@ namespace HiyoonXioParser
             XIOsAll.Clear();
             path = this.tbPath.Text;
             writeIsoFile(this.isoFileName);
-            worker.RunWorkerAsync();
+            xioFileSearchWorker.RunWorkerAsync();
         }
 
-        void worker_DoWork(object sender, DoWorkEventArgs e)
+        void xioFileSearchWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            List<XIOFile> xioFileListTemp = new List<XIOFile>();
             string[] filePaths = Directory.GetFiles(@path.Replace(System.Environment.NewLine, ""), "*.xio");
             if (filePaths != null && filePaths.Length > 0)
             {
                 foreach (string filePath in filePaths)
                 {
-                    XIOsAll.Add(new XIOFile(filePath));
+                    xioFileListTemp.Add(new XIOFile(filePath));
                 }
             }
 
@@ -150,16 +173,18 @@ namespace HiyoonXioParser
                     {
                         foreach (string filePath in subFilePaths)
                         {
-                            XIOsAll.Add(new XIOFile(filePath));
+                            xioFileListTemp.Add(new XIOFile(filePath));
                         }
                     }
                 }
             }
 
+            XIOsAll.Clear();
+            xioFileListTemp.GroupBy(x => x.Name).Select(x => x.First()).ToList().ForEach(XIOsAll.Add);
             writeIsoFile(this.isoXioFileName);
         }
 
-        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        void xioFileSearchWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.btnSearch.IsEnabled = true;
 
@@ -179,8 +204,22 @@ namespace HiyoonXioParser
             XIOs.Clear();
             XIOsAll.Where(x => String.IsNullOrEmpty(this.tbFilter.Text) || x.Name.Contains(this.tbFilter.Text)).ToList().ForEach(XIOs.Add);
         }
+        void tbPasteWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            
+        }
 
-        private void BtnParse_Click(object sender, RoutedEventArgs e)
+        void tbPasteWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            byte[] xioByte = XIOParser.getByte(this.tbXIO.Text);
+            if (XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).Count() > 0)
+            {
+                XIOs.Clear();
+                XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).ToList().ForEach(XIOs.Add);
+            }
+        }
+
+        private void BtnXioParse_Click(object sender, RoutedEventArgs e)
         {
             if (this.lbXio.SelectedItem == null)
             {
@@ -205,7 +244,7 @@ namespace HiyoonXioParser
             String result = XIOParser.merge(this.XIODatas.ToList());
             this.tbXIO.Text = result;
         }
-
+        
         private String initIsoFile(String fileName)
         {
             String path = @"C:\";
@@ -230,7 +269,12 @@ namespace HiyoonXioParser
                                 {
                                     if (!String.IsNullOrEmpty(xioData))
                                     {
-                                        this.XIOsAll.Add(new XIOFile(xioData));
+                                        try
+                                        {
+                                            this.XIOsAll.Add(new XIOFile(xioData));
+                                        } catch (Exception ex)
+                                        {
+                                        }
                                     }
                                 }
 
@@ -273,7 +317,6 @@ namespace HiyoonXioParser
                 }
             }
         }
-
 
         private void lbXio_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {

@@ -11,6 +11,7 @@ namespace HiyoonXioParser
     {
         public String FilePath { get; set; }
         public String Name { get; set; }
+        public int TotalLength { get; set; }
 
         public XIOFile(String path)
         {
@@ -19,6 +20,7 @@ namespace HiyoonXioParser
             xDoc.Load(this.FilePath);
             XmlNodeList name = xDoc.GetElementsByTagName("name");
             this.Name = name[0].InnerText + "(" + Path.GetFileName(this.FilePath) +  ")";
+            this.TotalLength = XIOParser.getTotalLength(path);
         }
     }
 }
