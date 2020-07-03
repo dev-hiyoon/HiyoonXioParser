@@ -211,11 +211,14 @@ namespace HiyoonXioParser
 
         void tbPasteWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            byte[] xioByte = XIOParser.getByte(this.tbXIO.Text);
-            if (XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).Count() > 0)
+            if (this.tbXIO.Text.LastIndexOf("@@") >= this.tbXIO.Text.Length - 2 || this.tbXIO.Text.LastIndexOf("     ") >= this.tbXIO.Text.Length - 6)
             {
-                XIOs.Clear();
-                XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).ToList().ForEach(XIOs.Add);
+                byte[] xioByte = XIOParser.getByte(this.tbXIO.Text);
+                if (XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).Count() > 0)
+                {
+                    XIOs.Clear();
+                    XIOsAll.Where(x => x.TotalLength == xioByte.Length || (x.TotalLength == xioByte.Length - preIdx - postIdx)).ToList().ForEach(XIOs.Add);
+                }
             }
         }
 
